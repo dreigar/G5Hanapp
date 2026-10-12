@@ -1,0 +1,228 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>HANAPP – CLSU Lost & Found Map (Prototype)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#eef4dc;--card:#fff;--tx:#1d2a1d;--mu:#5f6b5c;--g:#2f6a2f;--gl:#dcebd2;--bd:#d3dcc4;--gold:#e0b947;--lost:#d9822b;--found:#c0392b;--rec:#2f6a2f;--warn:#fff4d6}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#141815;--card:#1d231f;--tx:#e8eee9;--mu:#9aa79d;--g:#6fbf78;--gl:#25352a;--bd:#34403a;--warn:#3a3418}}
+html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}*,*:before,*:after{box-sizing:border-box}
+body{margin:0;height:100%;font:15px/1.5 system-ui,Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--tx);display:flex}
+#side{width:220px;background:var(--card);border-right:1px solid var(--bd);padding:12px;flex-shrink:0;overflow:auto;transition:.15s}
+#side.c{width:0;padding:0;overflow:hidden;border:0}
+#side a{display:block;padding:8px 10px;border-radius:8px;color:var(--tx);text-decoration:none;margin:2px 0}
+#side a:hover,#side a.on{background:var(--gl);color:var(--g);font-weight:600}
+.logo{font-weight:800;font-size:20px;color:var(--g);padding:6px 10px}.logo b{color:#b8941f}
+#wrap{flex:1;min-width:0;display:flex;flex-direction:column;overflow:auto}
+header{display:flex;gap:10px;align-items:center;padding:10px 16px;background:var(--card);border-bottom:1px solid var(--bd);position:sticky;top:0;z-index:5}
+header h1{font-size:17px;margin:0;flex:1}
+main{padding:16px;max-width:1100px;width:100%;margin:0 auto}
+.banner{background:var(--warn);border:1px solid var(--bd);border-radius:8px;padding:8px 12px;font-size:13px;margin-bottom:12px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:14px;margin-bottom:12px}
+.grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}
+.stats{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin-bottom:12px}
+.stat b{display:block;font-size:26px;color:var(--g)}
+button,.btn{font:inherit;padding:8px 14px;border-radius:8px;border:1px solid var(--g);background:var(--g);color:#fff;cursor:pointer;text-decoration:none;display:inline-block}
+button.s,.btn.s{background:transparent;color:var(--g)}button.d{background:var(--lost);border-color:var(--lost)}
+input,select,textarea{font:inherit;padding:8px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);width:100%}
+label{display:block;font-weight:600;margin:10px 0 3px;font-size:14px}.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.row>*{flex:1;min-width:130px}
+.tag{display:inline-block;padding:1px 9px;border-radius:99px;font-size:12px;font-weight:600;color:#fff}
+.t-lost{background:var(--lost)}.t-found{background:var(--found)}.t-rec{background:var(--rec)}.st{background:var(--gl);color:var(--g)}
+.err{color:var(--lost);font-size:13px}.mu{color:var(--mu);font-size:13px}
+table{width:100%;border-collapse:collapse;font-size:14px}td,th{padding:6px;border-bottom:1px solid var(--bd);text-align:left;vertical-align:top}
+.tbl{overflow-x:auto}
+.mapw{position:relative;border:1px solid var(--bd);border-radius:10px;overflow:hidden;background:#e9efe4}
+svg.map{width:100%;display:block;max-height:70vh}.mk{cursor:pointer}
+#pop{position:absolute;left:8px;bottom:8px;right:8px;max-width:340px;background:var(--card);color:var(--tx);border:1px solid var(--bd);border-radius:10px;padding:10px;font-size:14px}
+.tl{border-left:3px solid var(--g);margin-left:6px;padding-left:12px}.tl div{margin-bottom:8px}
+#modal{position:fixed;inset:0;background:#0007;display:none;align-items:center;justify-content:center;z-index:20;padding:16px}
+#modal>div{background:var(--card);border-radius:12px;padding:18px;max-width:440px;width:100%}
+#toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--g);color:#fff;padding:8px 16px;border-radius:8px;display:none;z-index:30}
+.split{display:grid;grid-template-columns:1fr;gap:12px}@media(min-width:900px){.split{grid-template-columns:1.6fr 1fr}}
+@media(max-width:800px){#side{position:fixed;z-index:15;height:100%;left:0}#side.c{display:none}}
+body{background:#cfdcb8;justify-content:center}
+#wrap{max-width:480px;background:var(--bg);box-shadow:0 0 24px #0003;padding-bottom:84px}
+#side{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;height:auto;display:flex;justify-content:space-around;align-items:flex-end;padding:6px 4px calc(6px + env(safe-area-inset-bottom,0px));border:0;border-top:1px solid var(--bd);border-radius:18px 18px 0 0;z-index:15;overflow:visible}
+#side a{flex:1;text-align:center;font-size:11px;padding:2px;margin:0;color:var(--tx);cursor:pointer;position:relative}#side a:hover{background:none}
+#side a span{display:block;font-size:20px;line-height:1.2}#side a.on{background:none;color:var(--g);font-weight:700}
+#side a.post span{width:52px;height:52px;margin:-26px auto 0;border-radius:50%;background:var(--g);color:#fff;font-size:34px;line-height:50px;box-shadow:0 3px 8px #0004}
+#side i,.ib i{position:absolute;top:-2px;right:22%;background:var(--lost);color:#fff;border-radius:99px;font-size:10px;font-style:normal;padding:0 5px}
+header{background:var(--bg);border:0}header .logo{display:flex;align-items:center;gap:4px}.logo b{color:var(--gold)}
+.ib{position:relative;text-decoration:none;font-size:20px;margin-right:8px}.ib i{right:-6px}
+.av{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;background:var(--g);color:#fff;text-decoration:none;font-weight:700}.av.big{width:64px;height:64px;font-size:26px;margin-bottom:6px}
+header h1{font-size:13px;color:var(--mu);font-weight:600;text-align:center}
+.sbar{background:var(--card);border-radius:22px;box-shadow:0 2px 8px #0002;padding:10px;margin-bottom:12px}.sbar input{border:0;background:none;margin-bottom:6px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;align-items:center}.chips button,.chips select{width:auto;border-radius:99px;padding:5px 12px;font-size:13px;background:var(--card);color:var(--tx);border:1px solid var(--bd)}.chips button.on{background:var(--g);color:#fff;border-color:var(--g)}
+.ic{display:flex;gap:10px;align-items:center;background:var(--card);border-radius:14px;box-shadow:0 2px 8px #0002;padding:10px;margin-bottom:10px;position:relative}
+.ph{width:64px;height:64px;border-radius:8px;background:var(--gl);display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0}
+.ic .bd{flex:1;font-size:13px;min-width:0;padding-bottom:14px}.ic .det{font-size:12px;color:var(--tx)}
+.bdg{position:absolute;top:10px;right:10px;padding:1px 10px;border-radius:99px;font-size:12px;font-weight:700;color:#fff}.bdg.un{background:var(--found)}.bdg.ok{background:var(--g)}.bdg.ls{background:var(--lost)}
+.clm{position:absolute;right:10px;bottom:10px;padding:3px 14px;font-size:12px;border-radius:99px;background:#777;border-color:#777}.clm:disabled{opacity:.5}
+.lg{text-align:center;padding:20px 8px}.wel{font-weight:800;font-size:22px;margin-top:8px}.logo.big{font-size:30px;justify-content:center;display:flex}
+.fld{display:flex;gap:8px;align-items:center;background:var(--card);border-radius:99px;box-shadow:0 2px 6px #0002;padding:4px 16px;margin:10px 0}.fld input{border:0;background:none}
+.pill{width:100%;border-radius:99px;padding:12px;font-size:16px;margin:6px 0}.pill.w{background:var(--card);color:var(--g)}
+.menu a{display:block;padding:10px 4px;color:var(--tx);text-decoration:none;border-bottom:1px solid var(--bd)}
+.out #wrap{padding-bottom:16px}.out #side,.out header{display:none}
+</style></head><body>
+<nav id="side"></nav>
+<div id="wrap"><header><div class="logo" style="padding:0"><svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7z" fill="#2f6a2f"/><circle cx="12" cy="9" r="3" fill="#fff"/></svg>HAN<b>APP</b></div><h1 id="ttl"></h1><span id="usr" style="display:flex;align-items:center"></span></header>
+<main><div class="banner"><b>Research prototype – demo mode.</b> Data is saved only in this browser (localStorage). Accounts are local demo accounts, not CLSU accounts. Sample records are labeled “SAMPLE”. The map is an illustrative schematic, not surveyed campus data.</div><div id="main">Loading…</div></main></div>
+<div id="modal"><div id="mb"></div></div><div id="toast"></div>
+<script>
+const K='hanapp_v1',$=s=>document.querySelector(s);let S,F={sort:'new',view:'grid'};
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const save=()=>{try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}};
+const uid=p=>p+Math.random().toString(36).slice(2,9),now=()=>new Date().toISOString();
+const U=()=>S.users.find(u=>u.id===S.session),adm=()=>U()?.role==='admin';
+const fd=x=>x?new Date(x).toLocaleString([], {dateStyle:'medium',timeStyle:'short'}):'';
+const ST=['Reported','Under Review','Potential Match','Awaiting Verification','Claimed','Closed','Archived'];
+const REC=['Claimed','Closed'];
+async function hash(p){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode('hanapp:'+p));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}
+// Illustrative schematic positions (NOT real coordinates)
+const LOCS=[['Oval',50,30],['Engineering Bldg',28,22],['Library',70,18],['Student Center',70,42],['Admin Bldg',50,56],['Auditorium',20,48],['Gymnasium',86,30],['Canteen',38,40],['Dormitory',88,58],['Main Gate',10,64]];
+async function init(){try{S=JSON.parse(localStorage.getItem(K))}catch(e){}
+ if(!S){const d=n=>new Date(Date.now()-n*864e5).toISOString().slice(0,16);
+  S={session:null,users:[{id:'u1',name:'Demo Admin',email:'admin@demo.hanapp',role:'admin',pw:await hash('Admin123!')},{id:'u2',name:'Demo Student',email:'student@demo.hanapp',role:'user',pw:await hash('Demo1234')}],
+  cats:['Electronics','Identification Cards','Wallets','Keys','School Supplies','Clothing','Accessories','Miscellaneous'],
+  locs:LOCS.map((l,i)=>({id:'L'+i,name:l[0],x:l[1],y:l[2]})),claims:[],notifs:[],audit:[],feedback:[],reports:[]};
+  const R=(t,title,cat,loc,desc,st,days)=>S.reports.push({id:uid('r'),type:t,title,cat,loc:'L'+loc,desc,priv:'Sample hidden detail',date:d(days),status:st,uid:'u2',created:now(),contact:'In-app',custody:t==='found'?'With finder':'',sample:true,hist:[{t:now(),by:'System',s:st,note:'Sample record'}]});
+  R('lost','Black wallet','Wallets',3,'Black leather wallet, last seen near the student center.','Reported',1);R('found','Wallet (black)','Wallets',3,'Black wallet found on a bench.','Reported',0);
+  R('lost','Grey tumbler','Miscellaneous',7,'Grey insulated tumbler.','Under Review',2);R('found','Orange phone case phone','Electronics',1,'Phone with orange case.','Awaiting Verification',1);
+  R('found','Keys with green keychain','Keys',2,'Three keys.','Claimed',4);R('lost','Scientific calculator','School Supplies',1,'Casio fx-991.','Reported',3);}
+ save();render()}
+function toast(m){const t=$('#toast');t.textContent=m;t.style.display='block';setTimeout(()=>t.style.display='none',2500)}
+function modal(h){$('#mb').innerHTML=h;$('#modal').style.display='flex'}function closeM(){$('#modal').style.display='none'}
+function tog(){$('#side').classList.toggle('c')}
+function notify(u,msg,rid){S.notifs.unshift({id:uid('n'),uid:u,msg,t:now(),read:false,rid})}
+function log(a,rid){if(adm())S.audit.unshift({t:now(),by:U().name,a,rid})}
+const loc=id=>S.locs.find(l=>l.id===id)||{name:'Unknown',x:50,y:35};
+const R=id=>S.reports.find(r=>r.id===id);
+const kind=r=>REC.includes(r.status)?'rec':r.type;
+const tag=r=>`<span class="tag t-${kind(r)}">${REC.includes(r.status)?'Recovered':r.type==='lost'?'Lost':'Found'}</span> <span class="tag st">${r.status}</span>${r.sample?' <span class="mu">SAMPLE</span>':''}`;
+function setStatus(id,s,note){const r=R(id);if(!r)return;r.status=s;r.hist.push({t:now(),by:U()?.name||'System',s,note:note||''});notify(r.uid,`Status of “${r.title}” is now ${s}.`,id);log(`Set status of "${r.title}" to ${s}`,id);save()}
+function matches(r){return S.reports.filter(o=>o.type!==r.type&&o.cat===r.cat&&!REC.concat('Archived').includes(o.status)).map(o=>{let s=0,w=[];const a=r.title.toLowerCase().split(/\W+/).filter(x=>x.length>2),b=o.title.toLowerCase();const c=a.filter(x=>b.includes(x));if(c.length){s+=c.length;w.push('similar words: '+c.join(', '))}
+ if(o.loc===r.loc){s++;w.push('same location')}if(Math.abs(new Date(o.date)-new Date(r.date))<7*864e5){s++;w.push('dates within 7 days')}return{o,s,w}}).filter(m=>m.s>0).sort((a,b)=>b.s-a.s)}
+// Map
+function mapSVG(list,pick){const cnt={};let m='';
+ const gl=S.locs.map(l=>`<g ${pick?`class="mk" onclick="pickLoc('${l.id}')"`:''}><circle cx="${l.x}" cy="${l.y}" r="3.2" fill="#cfe0cd" stroke="#7a947a" stroke-width=".3"/><text x="${l.x}" y="${l.y+6}" font-size="2.4" text-anchor="middle" fill="#3b4a3d">${esc(l.name)}</text></g>`).join('');
+ list.forEach(r=>{const l=loc(r.loc),n=cnt[r.loc]=(cnt[r.loc]||0)+1,x=l.x+(n-1)*3.2-1.5,y=l.y-5.5,k=kind(r),c={lost:'#d9822b',found:'#c0392b',rec:'#2f6a2f'}[k];
+  const sh=k==='lost'?`<path d="M${x} ${y-2.2}l2.2 4h-4.4z" fill="${c}"/>`:k==='found'?`<circle cx="${x}" cy="${y}" r="2" fill="${c}"/>`:`<rect x="${x-1.7}" y="${y-1.7}" width="3.4" height="3.4" fill="${c}"/>`;
+  m+=`<g class="mk" onclick="showPop('${r.id}')"><title>${esc(r.title)}</title>${sh}</g>`});
+ return `<div class="mapw"><svg class="map" viewBox="0 0 100 70" role="img" aria-label="Illustrative CLSU campus schematic"><rect width="100" height="70" fill="#e9efe4"/><path d="M0 35H100M50 0V70" stroke="#fff" stroke-width="2.5"/><text x="2" y="4" font-size="2.6" fill="#5c675f">ILLUSTRATIVE SCHEMATIC – not surveyed campus data</text>${gl}${m}</svg><div id="pop" style="display:none"></div></div><div class="mu">▲ Lost (orange) · ● Found (red) · ■ Claimed (green)</div>`}
+function showPop(id){const r=R(id),p=$('#pop');p.style.display='block';p.innerHTML=`<b>${esc(r.title)}</b><br>${esc(r.cat)} · ${tag(r)}<br>${fd(r.date)} · ${esc(loc(r.loc).name)}<br><a href="#/item/${r.id}">View details →</a> <a href="#" onclick="$('#pop').style.display='none';return false" style="float:right">close</a>`}
+// filters
+function fl(){return S.reports.filter(r=>r.status!=='Archived'||F.status==='Archived').filter(r=>(!F.q||(r.title+r.desc+r.cat).toLowerCase().includes(F.q.toLowerCase()))&&(!F.type||r.type===F.type)&&(!F.cat||r.cat===F.cat)&&(!F.status||r.status===F.status)&&(!F.loc||r.loc===F.loc)&&(!F.from||r.date>=F.from)).sort((a,b)=>F.sort==='old'?a.date.localeCompare(b.date):b.date.localeCompare(a.date))}
+const opt=(a,v,f)=>a.map(x=>{const [val,l]=Array.isArray(x)?x:[x,x];return`<option value="${esc(val)}" ${val===v?'selected':''}>${esc(l)}</option>`}).join('');
+function fbar(sv){return `<div class="card"><div class="row"><input placeholder="Search keyword…" value="${esc(F.q||'')}" oninput="setF('q',this.value)" aria-label="Search">
+<select onchange="setF('type',this.value)"><option value="">All types</option>${opt([['lost','Lost'],['found','Found']],F.type)}</select>
+<select onchange="setF('cat',this.value)"><option value="">All categories</option>${opt(S.cats,F.cat)}</select>
+<select onchange="setF('status',this.value)"><option value="">All statuses</option>${opt(ST,F.status)}</select>
+<select onchange="setF('loc',this.value)"><option value="">All locations</option>${opt(S.locs.map(l=>[l.id,l.name]),F.loc)}</select>
+<input type="date" value="${F.from||''}" onchange="setF('from',this.value)" aria-label="From date">
+<select onchange="setF('sort',this.value)">${opt([['new','Newest'],['old','Oldest']],F.sort)}</select>
+${sv?`<select onchange="setF('view',this.value)">${opt([['grid','Grid'],['list','List']],F.view)}</select>`:''}</div></div>`}
+function setF(k,v){F[k]=v;const e=$('#res');if(e)e.innerHTML=page()==='map'?mapBlock():listBlock()}
+const page=()=>(location.hash.slice(2).split('/')[0]||'home');
+function cardH(r){return `<div class="card" style="margin:0"><b>${esc(r.title)}</b><br>${tag(r)}<div class="mu">${esc(r.cat)} · ${esc(loc(r.loc).name)} · ${fd(r.date)}</div><p>${esc(r.desc.slice(0,90))}</p><a class="btn s" href="#/item/${r.id}">Details</a></div>`}
+function listBlock(){const l=fl();if(!l.length)return`<div class="card">No reports match your filters.</div>`;
+ return F.view==='list'?`<div class="card tbl"><table><tr><th>Item</th><th>Status</th><th>Location</th><th>Date</th></tr>${l.map(r=>`<tr><td><a href="#/item/${r.id}">${esc(r.title)}</a></td><td>${tag(r)}</td><td>${esc(loc(r.loc).name)}</td><td>${fd(r.date)}</td></tr>`).join('')}</table></div>`:`<div class="grid">${l.map(cardH).join('')}</div>`}
+function mapBlock(){const l=fl();return `<div class="split"><div>${mapSVG(l)}</div><div style="max-height:70vh;overflow:auto">${l.length?l.map(r=>`<div class="card" style="cursor:pointer" onclick="showPop('${r.id}')"><b>${esc(r.title)}</b><br>${tag(r)}<div class="mu">${esc(loc(r.loc).name)}</div></div>`).join(''):'<div class="card">No reports match.</div>'}</div></div>`}
+// pages
+const P={
+home(){const rc=[...S.reports].filter(r=>r.status!=='Archived').sort((a,b)=>b.date.localeCompare(a.date)).slice(0,4);
+ return `<div class="card"><div class="logo" style="padding:0;font-size:30px">HAN<b>APP</b></div><p>A GIS-based lost-and-found mapping prototype for Central Luzon State University. Report lost or found belongings, see where they were reported on a campus map, and coordinate recovery.</p>
+ <div class="row" style="margin-bottom:10px"><input id="hq" placeholder="Search reported items…"><button onclick="F.q=$('#hq').value;location.hash='#/browse'" style="flex:0">Search</button></div>
+ <a class="btn" href="#/lost">Report Lost Item</a> <a class="btn" href="#/found">Report Found Item</a> <a class="btn s" href="#/map">Explore Map</a></div>
+ <h3>Recent reports</h3><div class="grid">${rc.map(cardH).join('')}</div><h3>Map preview</h3>${mapSVG(S.reports.filter(r=>r.status!=='Archived'))}
+ <div class="card" style="margin-top:12px"><h3>How it works</h3><ol><li>Sign in and submit a lost or found report with its campus location.</li><li>HANAPP suggests possible matches (same category, similar words, same place, nearby dates). These always need human verification.</li><li>An owner sends a claim request; the reporter or an administrator verifies it and updates the status.</li></ol></div>`},
+dashboard(){if(!U())return needLogin();const u=U(),m=S.reports.filter(r=>r.uid===u.id);
+ const c=(f)=>m.filter(f).length,act=m.flatMap(r=>r.hist.map(h=>({...h,title:r.title}))).sort((a,b)=>b.t.localeCompare(a.t)).slice(0,6);
+ return `<div class="stats"><div class="card stat"><b>${c(r=>r.type==='lost')}</b>Lost reports</div><div class="card stat"><b>${c(r=>r.type==='found')}</b>Found reports</div><div class="card stat"><b>${c(r=>['Potential Match','Awaiting Verification','Under Review'].includes(r.status))}</b>Awaiting match/verification</div><div class="card stat"><b>${c(r=>REC.includes(r.status))}</b>Recovered</div></div>
+ <p class="mu">Counts reflect your own reports stored in this browser (includes sample data if you use the demo student account).</p>
+ <a class="btn" href="#/lost">New lost report</a> <a class="btn" href="#/found">New found report</a> <a class="btn s" href="#/map">Explore map</a>
+ <div class="card" style="margin-top:12px"><h3>Recent activity</h3>${act.length?act.map(a=>`<div>${esc(a.title)} → <b>${a.s}</b> <span class="mu">${fd(a.t)}</span></div>`).join(''):'No activity yet.'}</div>`},
+map(){return fbar()+`<div id="res">${mapBlock()}</div>`},
+browse(){return fbar(1)+`<div id="res">${listBlock()}</div>`},
+lost(){return form('lost')},found(){return form('found')},
+item(){const r=R(location.hash.split('/')[2]);if(!r)return`<div class="card">Report not found. <a href="#/browse">Browse items</a></div>`;
+ const u=U(),own=u&&u.id===r.uid,priv=own||adm(),cl=S.claims.filter(c=>c.rid===r.id),mine=u&&cl.find(c=>c.uid===u.id);
+ return `<div class="card"><h2 style="margin-top:0">${esc(r.title)}</h2>${tag(r)}<p>${esc(r.desc)}</p><div class="mu">${esc(r.cat)} · ${esc(loc(r.loc).name)} (approx.) · ${fd(r.date)}${r.custody?' · Custody: '+esc(r.custody):''}</div>
+ ${priv?`<p><b>Private details (owner/admin only):</b> ${esc(r.priv||'—')}<br><b>Contact preference:</b> ${esc(r.contact)}</p>`:'<p class="mu">Identifying details and contact info are hidden to prevent fraudulent claims.</p>'}
+ <div class="row">${u&&!own&&!mine&&!REC.includes(r.status)?`<button onclick="claimDlg('${r.id}')" style="flex:0">${r.type==='found'?'This is mine – request claim':'I found this – offer to return'}</button>`:''}${mine?`<span class="mu">Your request: ${mine.status}</span>`:''}${!u?'<a class="btn" href="#/login">Sign in to respond</a>':''}</div>
+ ${priv?`<div style="margin-top:10px"><label>Update status</label><select onchange="chg('${r.id}',this.value)">${opt(ST,r.status)}</select>${own&&!REC.includes(r.status)?`<button style="margin-top:8px" onclick="chg('${r.id}','Claimed')">Mark as recovered</button>`:''}</div>`:''}</div>
+ <div class="card"><h3>Status timeline</h3><div class="tl">${r.hist.map(h=>`<div><b>${h.s}</b> <span class="mu">${fd(h.t)} · ${esc(h.by)}</span>${h.note?'<br>'+esc(h.note):''}</div>`).join('')}</div></div>
+ ${priv?`<div class="card"><h3>Claim requests</h3>${cl.length?cl.map(c=>`<div><b>${esc(S.users.find(x=>x.id===c.uid)?.name)}</b>: ${esc(c.msg)}<br>Verification: ${esc(c.proof)} — <b>${c.status}</b> ${c.status==='Pending'?`<button onclick="decide('${c.id}',1)">Approve</button> <button class="d" onclick="decide('${c.id}',0)">Reject</button>`:''}</div>`).join('<hr>'):'None yet.'}</div>
+ <div class="card"><h3>Possible matches (need human verification)</h3>${matches(r).map(m=>`<div><a href="#/item/${m.o.id}">${esc(m.o.title)}</a> – ${m.w.join('; ')}</div>`).join('')||'<span class="mu">No possible matches found.</span>'}</div>`:''}
+ ${mapSVG([r])}`},
+mine(){if(!U())return needLogin();const l=S.reports.filter(r=>r.uid===U().id);
+ return l.length?l.map(r=>`<div class="card">${cardH(r)}<div class="row" style="margin-top:8px"><button class="s" onclick="editDlg('${r.id}')">Edit</button><button class="s" onclick="chg('${r.id}','Archived')">Archive</button></div></div>`).join(''):'<div class="card">You have no reports yet.</div>'},
+notifs(){if(!U())return needLogin();S.notifs.filter(n=>n.uid===U().id).forEach(n=>n.read=true);save();const l=S.notifs.filter(n=>n.uid===U().id);
+ return l.length?l.map(n=>`<div class="card">${esc(n.msg)} <span class="mu">${fd(n.t)}</span> ${n.rid?`<a href="#/item/${n.rid}">View</a>`:''}</div>`).join(''):'<div class="card">No notifications.</div>'},
+profile(){if(!U())return needLogin();const u=U();return `<div class="card"><label>Name</label><input id="pn" value="${esc(u.name)}"><label>Email</label><input value="${esc(u.email)}" disabled><label>Role</label><input value="${u.role}" disabled><br><br><button onclick="U().name=$('#pn').value.trim()||U().name;save();toast('Profile saved');render()">Save</button> <button class="s" onclick="S.session=null;save();location.hash='#/';render()">Log out</button></div>`},
+feedback(){return `<div class="card"><h3>Usability feedback</h3><p class="mu">Optional – for the research evaluation.</p><label>Ease of use (1–5)</label><select id="fr">${opt([1,2,3,4,5],3)}</select><label>Comments</label><textarea id="fc" rows="4"></textarea><br><br><button onclick="S.feedback.push({t:now(),r:$('#fr').value,c:$('#fc').value.slice(0,1000)});save();toast('Thank you!');$('#fc').value=''">Submit</button></div>`},
+login(){return `<div class="card" style="max-width:420px;margin:auto"><h3>Sign in (prototype accounts)</h3><label>Email</label><input id="le" type="email"><label>Password</label><input id="lp" type="password"><div id="le2" class="err"></div><br><button onclick="login()">Sign in</button> <button class="s" onclick="regDlg()">Create account</button>
+ <p class="mu">Demo: student@demo.hanapp / Demo1234 · admin@demo.hanapp / Admin123!</p></div>`},
+admin(){if(!adm())return`<div class="card err">Unauthorized: administrators only.</div>`;
+ const by=k=>Object.entries(S.reports.reduce((a,r)=>(a[k(r)]=(a[k(r)]||0)+1,a),{}));const pend=S.claims.filter(c=>c.status==='Pending');
+ return `<div class="stats"><div class="card stat"><b>${S.reports.length}</b>Total reports</div><div class="card stat"><b>${S.reports.filter(r=>REC.includes(r.status)).length}</b>Recovered</div><div class="card stat"><b>${pend.length}</b>Pending claims</div><div class="card stat"><b>${S.reports.filter(r=>r.flag).length}</b>Flagged</div></div>
+ <div class="card tbl"><h3>Manage reports</h3><table><tr><th>Item</th><th>Status</th><th>Actions</th></tr>${S.reports.map(r=>`<tr><td><a href="#/item/${r.id}">${esc(r.title)}</a>${r.flag?' 🚩':''}<div class="mu">${r.type} · ${esc(loc(r.loc).name)}</div></td><td><select onchange="chg('${r.id}',this.value)">${opt(ST,r.status)}</select></td><td><button class="s" onclick="flag('${r.id}')">${r.flag?'Unflag':'Flag'}</button> <button class="d" onclick="chg('${r.id}','Archived')">Archive</button></td></tr>`).join('')}</table></div>
+ <div class="card"><h3>Pending claim requests</h3>${pend.map(c=>`<div><a href="#/item/${c.rid}">${esc(R(c.rid)?.title)}</a>: ${esc(c.msg)} <button onclick="decide('${c.id}',1)">Approve</button> <button class="d" onclick="decide('${c.id}',0)">Reject</button></div>`).join('')||'None.'}</div>
+ <div class="card"><h3>Summary (stored records)</h3><b>By location:</b> ${by(r=>loc(r.loc).name).map(x=>x.join(': ')).join(' · ')}<br><b>By category:</b> ${by(r=>r.cat).map(x=>x.join(': ')).join(' · ')}<br><b>By status:</b> ${by(r=>r.status).map(x=>x.join(': ')).join(' · ')}<br><b>Feedback entries:</b> ${S.feedback.length}</div>
+ <div class="card"><h3>Categories &amp; location labels</h3><div class="row"><input id="nc" placeholder="New category"><button onclick="addCat()" style="flex:0">Add</button></div><br>${S.locs.map(l=>`<div class="row"><input value="${esc(l.name)}" onchange="ren('${l.id}',this.value)"></div>`).join('')}</div>
+ <div class="card tbl"><h3>Audit log</h3><table>${S.audit.slice(0,30).map(a=>`<tr><td>${fd(a.t)}</td><td>${esc(a.by)}</td><td>${esc(a.a)}</td></tr>`).join('')||'<tr><td>No actions yet.</td></tr>'}</table></div>`}
+};
+const needLogin=()=>`<div class="card">Please <a href="#/login">sign in</a> to view this page.</div>`;
+function form(t,r){if(!U())return needLogin();const f=r||{},L=t==='lost';
+ return `<div class="card" style="max-width:640px"><h3>${r?'Edit':'Report'} ${L?'Lost':'Found'} Item</h3><div id="fe" class="err"></div>
+ <label>Item name *</label><input id="f1" value="${esc(f.title)}"><label>Category *</label><select id="f2"><option value="">Select…</option>${opt(S.cats,f.cat)}</select>
+ <label>Description *</label><textarea id="f3" rows="3">${esc(f.desc)}</textarea><label>${L?'Date/time last seen':'Date/time found'} *</label><input id="f4" type="datetime-local" value="${f.date||''}">
+ <label>Campus location * <span class="mu">(pick from list or click a place on the map)</span></label><select id="f5" onchange="">${'<option value="">Select…</option>'+opt(S.locs.map(l=>[l.id,l.name]),f.loc)}</select>${mapSVG([],1)}
+ <label>Private identifying details <span class="mu">(never shown publicly)</span></label><input id="f6" value="${esc(f.priv)}">
+ ${L?'':`<label>Custody status *</label><select id="f7">${opt(['With finder','Turned in to Security','Turned in to Student Affairs'],f.custody)}</select>`}
+ <label>Preferred contact (private)</label><select id="f8">${opt(['In-app messages','Email','Meet at campus office'],f.contact)}</select><p class="mu">Photo upload is not implemented in this prototype.</p>
+ <button onclick="submitR('${t}'${r?`,'${r.id}'`:''})">Submit</button> <button class="s" onclick="history.back()">Cancel</button></div>`}
+function pickLoc(id){const s=$('#f5');if(s){s.value=id;toast('Selected: '+loc(id).name)}}
+function submitR(t,eid){const v=i=>($('#'+i)?.value||'').trim(),e=[];if(!v('f1'))e.push('Item name');if(!v('f2'))e.push('Category');if(v('f3').length<10)e.push('Description (10+ characters)');if(!v('f4'))e.push('Date/time');if(!v('f5'))e.push('Location');if(t==='found'&&!v('f7'))e.push('Custody');
+ if(e.length){$('#fe').textContent='Please complete: '+e.join(', ');return}
+ const d={title:v('f1').slice(0,100),cat:v('f2'),desc:v('f3').slice(0,1000),date:v('f4'),loc:v('f5'),priv:v('f6').slice(0,300),custody:t==='found'?v('f7'):'',contact:v('f8')};
+ if(eid){Object.assign(R(eid),d);R(eid).hist.push({t:now(),by:U().name,s:R(eid).status,note:'Report edited'});save();toast('Report updated');location.hash='#/item/'+eid;return}
+ const r={id:uid('r'),type:t,...d,status:'Reported',uid:U().id,created:now(),sample:false,hist:[{t:now(),by:U().name,s:'Reported',note:'Report submitted'}]};S.reports.push(r);
+ notify(U().id,`Your ${t} report “${r.title}” was submitted.`,r.id);matches(r).slice(0,3).forEach(m=>{notify(U().id,`Possible match for “${r.title}”: “${m.o.title}” (needs verification).`,m.o.id);notify(m.o.uid,`Possible match for “${m.o.title}”: “${r.title}” (needs verification).`,r.id)});
+ save();toast('Report submitted');location.hash='#/item/'+r.id}
+function editDlg(id){const r=R(id);if(REC.includes(r.status)){toast('Recovered reports cannot be edited');return}location.hash='#/edit/'+id}
+function chg(id,s){setStatus(id,s);toast('Status: '+s);render()}
+function flag(id){const r=R(id);r.flag=!r.flag;log((r.flag?'Flagged ':'Unflagged ')+r.title,id);save();render()}
+function claimDlg(id){modal(`<h3>Claim request</h3><label>Message *</label><textarea id="cm" rows="3"></textarea><label>Describe a detail only the owner would know *</label><input id="cp"><div id="ce" class="err"></div><br><button onclick="claim('${id}')">Send</button> <button class="s" onclick="closeM()">Cancel</button>`)}
+function claim(id){const m=$('#cm').value.trim(),p=$('#cp').value.trim();if(!m||!p){$('#ce').textContent='Both fields are required.';return}
+ S.claims.push({id:uid('c'),rid:id,uid:U().id,msg:m.slice(0,500),proof:p.slice(0,300),status:'Pending'});const r=R(id);if(['Reported','Under Review'].includes(r.status))setStatus(id,'Awaiting Verification','Claim request received');notify(r.uid,`New claim request on “${r.title}”.`,id);save();closeM();toast('Claim request sent');render()}
+function decide(cid,ok){const c=S.claims.find(x=>x.id===cid);c.status=ok?'Approved':'Rejected';notify(c.uid,`Your claim request was ${c.status.toLowerCase()}.`,c.rid);log(`${c.status} claim on ${R(c.rid)?.title}`,c.rid);if(ok)setStatus(c.rid,'Claimed','Claim approved after verification');save();render()}
+function addCat(){const v=$('#nc').value.trim();if(v&&!S.cats.includes(v)){S.cats.push(v);log('Added category '+v);save();render()}}
+function ren(id,v){if(v.trim()){const l=S.locs.find(x=>x.id===id);log(`Renamed location ${l.name} → ${v}`);l.name=v.trim().slice(0,60);save()}}
+async function login(){const e=$('#le').value.trim().toLowerCase(),p=await hash($('#lp').value),u=S.users.find(x=>x.email===e&&x.pw===p);if(!u){$('#le2').textContent='Invalid email or password.';return}S.session=u.id;save();if(!$('#rm')?.checked)addEventListener('pagehide',()=>{S.session=null;save()});location.hash='#/';render()}
+function regDlg(){modal(`<h3>Create demo account</h3><label>Name</label><input id="rn"><label>Email</label><input id="re" type="email"><label>Password (8+ chars)</label><input id="rp" type="password"><div id="rr" class="err"></div><br><button onclick="reg()">Register</button> <button class="s" onclick="closeM()">Cancel</button>`)}
+async function reg(){const n=$('#rn').value.trim(),e=$('#re').value.trim().toLowerCase(),p=$('#rp').value;if(!n||!/^\S+@\S+\.\S+$/.test(e)||p.length<8){$('#rr').textContent='Enter a name, valid email, and 8+ character password.';return}
+ if(S.users.some(u=>u.email===e)){$('#rr').textContent='Email already registered.';return}const u={id:uid('u'),name:n.slice(0,60),email:e,role:'user',pw:await hash(p)};S.users.push(u);S.session=u.id;save();closeM();location.hash='#/dashboard';render()}
+function render(){let p=page();const T={home:'Home',dashboard:'Dashboard',map:'Interactive Map',browse:'Browse Items',lost:'Report Lost Item',found:'Report Found Item',mine:'My Reports',notifs:'Notifications',profile:'Profile',admin:'Administration',item:'Item Details',feedback:'Feedback',login:'Sign in',edit:'Edit Report'};
+ let h;try{if(p==='edit'){const r=R(location.hash.split('/')[2]);h=r&&(r.uid===U()?.id||adm())?form(r.type,r):'<div class="card err">Unauthorized.</div>'}else h=(!U()?P.login:(P[p]||P.home))()}catch(e){h=`<div class="card err">Something went wrong. <a href="#/">Go home</a></div>`}
+ $('#main').innerHTML=h;document.body.classList.toggle('out',!U());$('#ttl').textContent=T[p]||'HANAPP';const u=U(),nn=u?S.notifs.filter(n=>n.uid===u.id&&!n.read).length:0;
+ $('#usr').innerHTML=u?`<span class="mu">${esc(u.name)}</span>`:'<a class="btn" href="#/login">Sign in</a>';
+ const nav=[['','Home'],['dashboard','Dashboard'],['map','Interactive Map'],['browse','Browse Items'],['lost','Report Lost Item'],['found','Report Found Item'],['mine','My Reports'],['notifs','Notifications'+(nn?` (${nn})`:'')],['profile','Profile'],['feedback','Feedback']];if(adm())nav.push(['admin','Administration']);
+ $('#side').innerHTML=`<div class="logo">HAN<b>APP</b></div>`+nav.map(n=>`<a href="#/${n[0]}" class="${(n[0]||'home')===p?'on':''}" onclick="if(innerWidth<800)tog()">${n[1]}</a>`).join('');scrollTo(0,0);$('#wrap').scrollTo(0,0)}
+const PIN=s=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7z" fill="#2f6a2f"/><circle cx="12" cy="9" r="3" fill="#fff"/></svg>`;
+const ago=t=>{const m=Math.max(1,Math.round((Date.now()-new Date(t))/6e4));return m<60?m+' min ago':m<1440?Math.round(m/60)+' hours ago':Math.round(m/1440)+' days ago'};
+cardH=r=>{const rc=REC.includes(r.status);return `<div class="ic"><div class="ph">${r.type==='lost'?'🔎':'🎒'}</div><div class="bd"><b>${esc(r.title)}</b><span class="bdg ${rc?'ok':r.type==='lost'?'ls':'un'}">${rc?'Claimed':r.type==='lost'?'Lost':'Unclaimed'}</span><div>🕒 ${ago(r.date)}</div><div>📍 ${esc(loc(r.loc).name)}</div><a href="#/item/${r.id}" class="det">Details</a>${r.sample?' <span class="mu">SAMPLE</span>':''}</div><button class="clm" ${rc?'disabled':''} onclick="location.hash='#/item/${r.id}'">${r.type==='lost'?'I found it':'Claim'}</button></div>`};
+listBlock=()=>{const l=fl();return l.length?l.map(cardH).join(''):'<div class="card">No reports match your filters.</div>'};
+mapBlock=()=>{const l=fl();return mapSVG(l)+'<div style="height:12px"></div>'+l.map(cardH).join('')};
+const sb=m=>`<div class="sbar"><input placeholder="${m?'Search for lost or found items, locations…':'Search for items…'}" value="${esc(F.q||'')}" oninput="setF('q',this.value)" aria-label="Search"><div class="chips"><button class="${!F.type&&!F.cat&&!F.loc?'on':''}" onclick="F={sort:'new',view:'grid'};render()">ALL</button>${m?`<button class="${F.type==='found'?'on':''}" onclick="F.type='found';render()">Found</button><button class="${F.type==='lost'?'on':''}" onclick="F.type='lost';render()">Lost</button>`:`<select onchange="setF('cat',this.value)"><option value="">Category</option>${opt(S.cats,F.cat)}</select><select onchange="setF('loc',this.value)"><option value="">Location</option>${opt(S.locs.map(l=>[l.id,l.name]),F.loc)}</select>`}<button onclick="filterDlg()">Filter ▾</button></div></div>`;
+P.home=()=>sb(0)+`<div id="res">${listBlock()}</div>`;P.browse=P.home;
+P.map=()=>sb(1)+`<div id="res">${mapBlock()}</div>`;
+function filterDlg(){modal(`<h3>Filters</h3><label>Type</label><select onchange="setF('type',this.value)"><option value="">All</option>${opt([['lost','Lost'],['found','Found']],F.type)}</select><label>Status</label><select onchange="setF('status',this.value)"><option value="">All</option>${opt(ST,F.status)}</select><label>From date</label><input type="date" value="${F.from||''}" onchange="setF('from',this.value)"><label>Sort</label><select onchange="setF('sort',this.value)">${opt([['new','Newest'],['old','Oldest']],F.sort)}</select><br><br><button onclick="closeM();render()">Done</button>`)}
+function postDlg(){modal(`<h3>New report</h3><a class="btn pill" href="#/lost" onclick="closeM()" style="text-align:center">Report Lost Item</a><a class="btn pill" href="#/found" onclick="closeM()" style="text-align:center">Report Found Item</a><button class="s pill" onclick="closeM()">Cancel</button>`)}
+function eye(){const p=$('#lp');p.type=p.type==='password'?'text':'password'}
+P.login=()=>`<div class="lg">${PIN(90)}<div class="wel">WELCOME TO</div><div class="logo big">HAN<b>APP</b></div><p>Sign in with your account <span class="mu">(prototype – not linked to CLSU)</span></p><div class="fld">👤<input id="le" type="email" placeholder="Email (demo account)" aria-label="Email"></div><div class="fld">🔒<input id="lp" type="password" placeholder="Password" aria-label="Password"><span onclick="eye()" style="cursor:pointer">👁</span></div><div class="row" style="justify-content:space-between"><label style="margin:0;font-weight:400"><input id="rm" type="checkbox" checked style="width:auto"> Remember me</label><a href="#" onclick="toast('Password reset is not available in the prototype');return false" style="color:var(--g);flex:0;white-space:nowrap">Forgot password?</a></div><div id="le2" class="err"></div><button class="pill" onclick="login()">Log in</button><div class="mu">or</div><button class="pill w" onclick="regDlg()">Create Account</button><p class="mu">Demo: student@demo.hanapp / Demo1234 · admin@demo.hanapp / Admin123!</p></div>`;
+P.profile=()=>{if(!U())return needLogin();const u=U();return `<div class="card" style="text-align:center"><div class="av big">${esc((u.name[0]||'U').toUpperCase())}</div><br><b>${esc(u.name)}</b><div class="mu">${esc(u.email)} · ${u.role}</div></div><div class="card menu"><a href="#/dashboard">📊 Dashboard</a><a href="#/mine">📄 My Reports</a><a href="#/feedback">📝 Usability feedback</a>${adm()?'<a href="#/admin">🛡 Administration</a>':''}</div><div class="card"><label>Display name</label><input id="pn" value="${esc(u.name)}"><br><br><button onclick="U().name=$('#pn').value.trim()||U().name;save();toast('Profile saved');render()">Save</button> <button class="s" onclick="S.session=null;save();location.hash='#/';render()">Log out</button></div>`};
+const _r=render;render=function(){_r();paintNav()};
+function paintNav(){const u=U(),p=page(),nn=u?S.notifs.filter(n=>n.uid===u.id&&!n.read).length:0,t=(h,i,l,on)=>`<a href="#/${h}" class="${on?'on':''}"><span>${i}</span>${l}</a>`;
+$('#side').innerHTML=t('','⌂','Home',p==='home'||p==='browse')+t('map','📍','Map',p==='map')+`<a class="post" onclick="postDlg()"><span>+</span>Post</a>`+t('notifs','💬'+(nn?`<i>${nn}</i>`:''),'Alerts',p==='notifs')+t('profile','👤','Profile',['profile','admin','mine','dashboard','feedback'].includes(p));
+$('#usr').innerHTML=u?`<a href="#/notifs" class="ib">🔔${nn?`<i>${nn}</i>`:''}</a><a href="#/profile" class="av">${esc((u.name[0]||'U').toUpperCase())}</a>`:''}
+addEventListener('hashchange',render);$('#modal').onclick=e=>{if(e.target.id==='modal')closeM()};
+if(innerWidth>800)$('#side').classList.remove('c');
+init();
+</script></body></html>
